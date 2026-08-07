@@ -1,0 +1,32 @@
+// HOTFIX版
+// startAR() をこの内容に置き換えてください
+
+async function startAR() {
+  hideError();
+
+  // 白画面は残したまま黒画面を上に表示
+  show(loadingScreen);
+
+  try {
+    await primeVideoForIOS();
+
+    const arSystem = arScene.systems["mindar-image-system"];
+    if (!arSystem) throw new Error("MindAR system not ready");
+
+    await arSystem.start();
+
+    // カメラ描画待ち
+    await new Promise(r=>setTimeout(r,500));
+
+    hide(startScreen);
+    hide(loadingScreen);
+
+    show(scanUI);
+
+  } catch(error){
+    console.error(error);
+    hide(loadingScreen);
+    show(startScreen);
+    showError("カメラを開始できませんでした。");
+  }
+}

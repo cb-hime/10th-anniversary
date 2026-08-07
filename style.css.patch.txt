@@ -1,0 +1,10 @@
+.screen--loading{
+position:fixed;
+inset:0;
+background:#000;
+display:grid;
+place-items:center;
+z-index:999;
+color:#fff;
+transition:opacity .35s;
+}
