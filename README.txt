@@ -1,46 +1,20 @@
-BIRTHDAY AR - 最終版
+BIRTHDAY AR - v2
 
-このフォルダをそのまま GitHub Pages にアップロードして使えます。
+今回の変更
+1. Tシャツ認識後、動画再生前に「3 → 2 → 1」のカウントダウンを追加
+2. MindAR標準のスキャン枠を無効化し、独自スキャン枠だけ表示
+   （二重のカッコ表示を解消）
 
-必要ファイル
-- index.html
-- style.css
-- script.js
-- targets.mind
-- movie.mp4
+GitHub更新方法
+1. birthday-ar-final-v2.zip を解凍
+2. GitHub の birthday-ar Repository を開く
+3. Add file → Upload files
+4. index.html / style.css / script.js / targets.mind をアップロード
+5. movie.mp4 は現在の本番動画を使う場合、そのままでOK
+6. Commit changes
+7. Actions の pages build and deployment が緑になるまで待つ
+8. iPhone Safari で以下を開く
+   https://cb-hime.github.io/birthday-ar/?v=countdown
 
-今回同梱している movie.mp4 は「動作確認用の仮動画」です。
-本番では、ご自身のお祝い動画を必ず movie.mp4 という同じ名前で上書きしてください。
-
-推奨動画形式
-- MP4
-- H.264 映像
-- AAC 音声
-- できれば 1080p 以下
-- 容量は 50MB 以下を推奨
-
-GitHub での更新方法
-1. Repository の Code 画面を開く
-2. Add file → Upload files
-3. このフォルダの中身をアップロード
-4. Commit changes
-5. Actions で pages build and deployment が緑のチェックになるまで待つ
-6. https://cb-hime.github.io/birthday-ar/ を iPhone Safari で開く
-
-iPhoneで古いデータが残る場合
-URLの末尾に ?v=final を付けて開いてください。
-例:
-https://cb-hime.github.io/birthday-ar/?v=final
-
-使い方
-1. URLを開く
-2. STARTを押す
-3. カメラを許可
-4. Tシャツのデザインにカメラを向ける
-5. 認識すると movie.mp4 が全画面で再生
-6. 動画終了後に HAPPY BIRTHDAY! を表示
-
-注意
-- iPhone/Androidの標準カメラ単体では画像認識しません。
-- 必ず最初にこのWebページをSafari/Chromeで開く必要があります。
-- Tシャツに強いシワがある場合は認識率が下がります。
+本番動画を差し替える場合
+- 新しい動画を movie.mp4 という名前でアップロードしてください。

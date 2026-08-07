@@ -8,7 +8,6 @@
 
   <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
-
   <link rel="stylesheet" href="./style.css" />
 </head>
 
@@ -41,6 +40,10 @@
     <div class="scan-message">Tシャツのデザインにカメラを向けてください</div>
   </div>
 
+  <div id="countdownOverlay" class="countdown-overlay hidden" aria-live="assertive">
+    <div id="countdownNumber" class="countdown-number">3</div>
+  </div>
+
   <div id="videoOverlay" class="video-overlay hidden">
     <video
       id="birthdayVideo"
@@ -69,7 +72,7 @@
 
   <a-scene
     id="arScene"
-    mindar-image="imageTargetSrc: ./targets.mind; autoStart: false; filterMinCF: 0.001; filterBeta: 0.01; warmupTolerance: 5; missTolerance: 5;"
+    mindar-image="imageTargetSrc: ./targets.mind; autoStart: false; uiLoading: no; uiScanning: no; uiError: no; filterMinCF: 0.001; filterBeta: 0.01; warmupTolerance: 5; missTolerance: 5;"
     embedded
     color-space="sRGB"
     renderer="colorManagement: true; physicallyCorrectLights: true; alpha: true; antialias: true"

@@ -26,7 +26,6 @@ body {
   inset: 0;
 }
 
-/* MindAR camera video must remain visible behind the A-Frame canvas. */
 video:not(#birthdayVideo) {
   position: fixed !important;
   inset: 0 !important;
@@ -37,15 +36,7 @@ video:not(#birthdayVideo) {
   background: transparent !important;
 }
 
-a-scene {
-  position: fixed !important;
-  inset: 0 !important;
-  width: 100vw !important;
-  height: 100vh !important;
-  z-index: 1 !important;
-  background: transparent !important;
-}
-
+a-scene,
 .a-canvas {
   position: fixed !important;
   inset: 0 !important;
@@ -57,7 +48,8 @@ a-scene {
 
 .screen,
 .video-overlay,
-.message-overlay {
+.message-overlay,
+.countdown-overlay {
   position: fixed;
   inset: 0;
   z-index: 50;
@@ -236,6 +228,31 @@ a-scene {
   font-weight: 700;
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
+}
+
+.countdown-overlay {
+  z-index: 70;
+  display: grid;
+  place-items: center;
+  background: rgba(0,0,0,.22);
+  pointer-events: none;
+}
+
+.countdown-number {
+  color: #fff;
+  font-size: clamp(140px, 44vw, 320px);
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -.06em;
+  text-shadow: 0 4px 30px rgba(0,0,0,.35);
+  animation: countdownPop .72s ease both;
+}
+
+@keyframes countdownPop {
+  0% { transform: scale(.72); opacity: 0; }
+  22% { transform: scale(1.05); opacity: 1; }
+  72% { transform: scale(1); opacity: 1; }
+  100% { transform: scale(.92); opacity: 0; }
 }
 
 .video-overlay {

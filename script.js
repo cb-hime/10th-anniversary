@@ -2,6 +2,8 @@ const startScreen = document.querySelector("#startScreen");
 const loadingScreen = document.querySelector("#loadingScreen");
 const startButton = document.querySelector("#startButton");
 const scanUI = document.querySelector("#scanUI");
+const countdownOverlay = document.querySelector("#countdownOverlay");
+const countdownNumber = document.querySelector("#countdownNumber");
 const videoOverlay = document.querySelector("#videoOverlay");
 const birthdayVideo = document.querySelector("#birthdayVideo");
 const closeVideo = document.querySelector("#closeVideo");
@@ -16,6 +18,7 @@ const imageTarget = document.querySelector("#imageTarget");
 let arStarted = false;
 let videoShown = false;
 let targetIsVisible = false;
+let countdownRunning = false;
 
 function show(el) {
   el.classList.remove("hidden");
@@ -23,6 +26,10 @@ function show(el) {
 
 function hide(el) {
   el.classList.add("hidden");
+}
+
+function wait(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 function showError(message) {
@@ -41,18 +48,12 @@ function resetVideo() {
 }
 
 async function primeVideoForIOS() {
-  /*
-    iPhone Safari blocks later audio playback unless media has been touched by a
-    user gesture. We briefly start it muted during the START tap, then reset it.
-  */
   birthdayVideo.muted = true;
   try {
     await birthdayVideo.play();
     birthdayVideo.pause();
     birthdayVideo.currentTime = 0;
-  } catch (_) {
-    // If the file isn't fully loaded yet, normal playback handling below still applies.
-  }
+  } catch (_) {}
   birthdayVideo.muted = false;
 }
 
@@ -65,14 +66,11 @@ async function startAR() {
     await primeVideoForIOS();
 
     const arSystem = arScene.systems["mindar-image-system"];
-    if (!arSystem) {
-      throw new Error("MindAR system not ready");
-    }
+    if (!arSystem) throw new Error("MindAR system not ready");
 
     await arSystem.start();
     arStarted = true;
 
-    // Give Safari a moment to paint the camera video before showing the scanner UI.
     setTimeout(() => {
       hide(loadingScreen);
       show(scanUI);
@@ -81,9 +79,33 @@ async function startAR() {
     console.error(error);
     hide(loadingScreen);
     show(startScreen);
-    showError(
-      "カメラを開始できませんでした。Safariのカメラ許可を確認して、ページを再読み込みしてください。"
-    );
+    showError("カメラを開始できませんでした。Safariのカメラ許可を確認して、ページを再読み込みしてください。");
+  }
+}
+
+async function runCountdown() {
+  if (countdownRunning || videoShown) return;
+
+  countdownRunning = true;
+  hide(scanUI);
+  show(countdownOverlay);
+
+  for (const n of ["3", "2", "1"]) {
+    countdownNumber.textContent = n;
+    countdownNumber.style.animation = "none";
+    void countdownNumber.offsetWidth;
+    countdownNumber.style.animation = "countdownPop .72s ease both";
+    await wait(760);
+  }
+
+  hide(countdownOverlay);
+  countdownRunning = false;
+
+  // Only start if the target is still in view after the countdown.
+  if (targetIsVisible) {
+    await playBirthdayVideo();
+  } else {
+    show(scanUI);
   }
 }
 
@@ -92,6 +114,7 @@ async function playBirthdayVideo() {
   videoShown = true;
 
   hide(scanUI);
+  hide(countdownOverlay);
   show(videoOverlay);
   birthdayVideo.currentTime = 0;
 
@@ -108,12 +131,7 @@ function closeBirthdayVideo() {
   hide(videoOverlay);
   videoShown = false;
 
-  if (targetIsVisible) {
-    // Wait until the camera leaves the target before allowing another trigger.
-    hide(scanUI);
-  } else {
-    show(scanUI);
-  }
+  if (!targetIsVisible) show(scanUI);
 }
 
 function finishBirthdayVideo() {
@@ -126,12 +144,15 @@ startButton.addEventListener("click", startAR);
 
 imageTarget.addEventListener("targetFound", () => {
   targetIsVisible = true;
-  playBirthdayVideo();
+  if (!videoShown && !countdownRunning && messageOverlay.classList.contains("hidden")) {
+    runCountdown();
+  }
 });
 
 imageTarget.addEventListener("targetLost", () => {
   targetIsVisible = false;
-  if (!videoShown && messageOverlay.classList.contains("hidden")) {
+
+  if (!videoShown && !countdownRunning && messageOverlay.classList.contains("hidden")) {
     show(scanUI);
   }
 });
@@ -148,13 +169,10 @@ playButton.addEventListener("click", async () => {
 });
 
 closeVideo.addEventListener("click", closeBirthdayVideo);
-
 birthdayVideo.addEventListener("ended", finishBirthdayVideo);
 
 birthdayVideo.addEventListener("error", () => {
-  showError(
-    "movie.mp4 を読み込めませんでした。MP4（H.264映像＋AAC音声）で書き出しているか確認してください。"
-  );
+  showError("movie.mp4 を読み込めませんでした。MP4（H.264映像＋AAC音声）で書き出しているか確認してください。");
 });
 
 scanAgainButton.addEventListener("click", () => {
