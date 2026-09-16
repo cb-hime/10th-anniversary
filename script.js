@@ -1,81 +1,67 @@
-const startScreen = document.querySelector("#startScreen");
-const loadingScreen = document.querySelector("#loadingScreen");
-const startButton = document.querySelector("#startButton");
-const scanUI = document.querySelector("#scanUI");
-const countdownOverlay = document.querySelector("#countdownOverlay");
-const countdownNumber = document.querySelector("#countdownNumber");
-const videoOverlay = document.querySelector("#videoOverlay");
-const birthdayVideo = document.querySelector("#birthdayVideo");
-const closeVideo = document.querySelector("#closeVideo");
-const tapToPlay = document.querySelector("#tapToPlay");
-const playButton = document.querySelector("#playButton");
-const messageOverlay = document.querySelector("#messageOverlay");
-const scanAgainButton = document.querySelector("#scanAgainButton");
-const errorBox = document.querySelector("#errorBox");
-const arScene = document.querySelector("#arScene");
-const imageTarget = document.querySelector("#imageTarget");
+const startScreen=document.querySelector("#startScreen");
+const loadingScreen=document.querySelector("#loadingScreen");
+const startButton=document.querySelector("#startButton");
+const scanUI=document.querySelector("#scanUI");
+const countdownOverlay=document.querySelector("#countdownOverlay");
+const countdownNumber=document.querySelector("#countdownNumber");
+const videoOverlay=document.querySelector("#videoOverlay");
+const birthdayVideo=document.querySelector("#birthdayVideo");
+const closeVideo=document.querySelector("#closeVideo");
+const tapToPlay=document.querySelector("#tapToPlay");
+const playButton=document.querySelector("#playButton");
+const messageOverlay=document.querySelector("#messageOverlay");
+const messageLines=[...document.querySelectorAll(".message-line")];
+const cameraButton=document.querySelector("#cameraButton");
+const errorBox=document.querySelector("#errorBox");
+const arScene=document.querySelector("#arScene");
+const imageTarget=document.querySelector("#imageTarget");
 
-let arStarted = false;
-let videoShown = false;
-let targetIsVisible = false;
-let countdownRunning = false;
+let arStarted=false;
+let videoShown=false;
+let targetIsVisible=false;
+let countdownRunning=false;
+let countdownRunId=0;
+let messageRunId=0;
+let requireTargetLeaveBeforeReplay=false;
 
-function show(el) {
-  el.classList.remove("hidden");
+function show(el){el.classList.remove("hidden")}
+function hide(el){el.classList.add("hidden")}
+function wait(ms){return new Promise(r=>setTimeout(r,ms))}
+function showError(message){errorBox.textContent=message;show(errorBox)}
+function hideError(){hide(errorBox)}
+function resetVideo(){birthdayVideo.pause();try{birthdayVideo.currentTime=0}catch(_){}hide(tapToPlay)}
+
+function resetMessageScreen(){
+  messageRunId++;
+  messageLines.forEach(line=>line.classList.remove("is-visible"));
+  cameraButton.classList.remove("is-visible");
+  hide(cameraButton);
 }
 
-function hide(el) {
-  el.classList.add("hidden");
-}
-
-function wait(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
-
-function showError(message) {
-  errorBox.textContent = message;
-  show(errorBox);
-}
-
-function hideError() {
-  hide(errorBox);
-}
-
-function resetVideo() {
-  birthdayVideo.pause();
-  try { birthdayVideo.currentTime = 0; } catch (_) {}
-  hide(tapToPlay);
-}
-
-async function primeVideoForIOS() {
-  birthdayVideo.muted = true;
-  try {
+async function primeVideoForIOS(){
+  birthdayVideo.muted=true;
+  try{
     await birthdayVideo.play();
     birthdayVideo.pause();
-    birthdayVideo.currentTime = 0;
-  } catch (_) {}
-  birthdayVideo.muted = false;
+    birthdayVideo.currentTime=0;
+  }catch(_){}
+  birthdayVideo.muted=false;
 }
 
-async function startAR() {
+async function startAR(){
   hideError();
-  hide(startScreen);
   show(loadingScreen);
-
-  try {
+  try{
     await primeVideoForIOS();
-
-    const arSystem = arScene.systems["mindar-image-system"];
-    if (!arSystem) throw new Error("MindAR system not ready");
-
+    const arSystem=arScene.systems["mindar-image-system"];
+    if(!arSystem) throw new Error("MindAR system not ready");
     await arSystem.start();
-    arStarted = true;
-
-    setTimeout(() => {
-      hide(loadingScreen);
-      show(scanUI);
-    }, 250);
-  } catch (error) {
+    arStarted=true;
+    await wait(500);
+    hide(startScreen);
+    hide(loadingScreen);
+    show(scanUI);
+  }catch(error){
     console.error(error);
     hide(loadingScreen);
     show(startScreen);
@@ -83,113 +69,126 @@ async function startAR() {
   }
 }
 
-async function runCountdown() {
-  if (countdownRunning || videoShown) return;
+function cancelCountdown(){
+  countdownRunId++;
+  countdownRunning=false;
+  countdownNumber.classList.remove("is-animating");
+  hide(countdownOverlay);
+  if(!videoShown && messageOverlay.classList.contains("hidden")) show(scanUI);
+}
 
-  countdownRunning = true;
+async function runCountdown(){
+  if(countdownRunning||videoShown||!targetIsVisible||!messageOverlay.classList.contains("hidden")||requireTargetLeaveBeforeReplay) return;
+  countdownRunning=true;
+  const myRunId=++countdownRunId;
   hide(scanUI);
   show(countdownOverlay);
 
-  for (const n of ["3", "2", "1"]) {
-    countdownNumber.textContent = n;
-    countdownNumber.style.animation = "none";
+  for(const n of ["3","2","1"]){
+    if(myRunId!==countdownRunId||!targetIsVisible){cancelCountdown();return}
+    countdownNumber.textContent=n;
+    countdownNumber.classList.remove("is-animating");
     void countdownNumber.offsetWidth;
-    countdownNumber.style.animation = "countdownPop .72s ease both";
+    countdownNumber.classList.add("is-animating");
     await wait(760);
+    if(myRunId!==countdownRunId||!targetIsVisible){cancelCountdown();return}
   }
 
   hide(countdownOverlay);
-  countdownRunning = false;
-
-  // Only start if the target is still in view after the countdown.
-  if (targetIsVisible) {
-    await playBirthdayVideo();
-  } else {
-    show(scanUI);
-  }
+  countdownRunning=false;
+  if(myRunId===countdownRunId&&targetIsVisible) await playBirthdayVideo();
+  else show(scanUI);
 }
 
-async function playBirthdayVideo() {
-  if (videoShown) return;
-  videoShown = true;
-
+async function playBirthdayVideo(){
+  if(videoShown) return;
+  videoShown=true;
   hide(scanUI);
   hide(countdownOverlay);
   show(videoOverlay);
-  birthdayVideo.currentTime = 0;
-
-  try {
+  try{
+    birthdayVideo.currentTime=0;
     await birthdayVideo.play();
-  } catch (error) {
-    console.warn("Autoplay blocked:", error);
+  }catch(error){
+    console.warn("Autoplay blocked:",error);
     show(tapToPlay);
   }
 }
 
-function closeBirthdayVideo() {
+function closeBirthdayVideo(){
   resetVideo();
   hide(videoOverlay);
-  videoShown = false;
-
-  if (!targetIsVisible) show(scanUI);
+  videoShown=false;
+  requireTargetLeaveBeforeReplay=targetIsVisible;
+  if(!targetIsVisible) show(scanUI);
 }
 
-function finishBirthdayVideo() {
+async function showMessageSequence(){
   resetVideo();
   hide(videoOverlay);
+  videoShown=false;
+  hide(scanUI);
+  hide(countdownOverlay);
+
+  resetMessageScreen();
   show(messageOverlay);
+
+  const myRunId=++messageRunId;
+  for(const line of messageLines){
+    if(myRunId!==messageRunId) return;
+    line.classList.add("is-visible");
+    await wait(900);
+  }
+
+  if(myRunId!==messageRunId) return;
+  await wait(450);
+  show(cameraButton);
+  requestAnimationFrame(()=>cameraButton.classList.add("is-visible"));
 }
 
-startButton.addEventListener("click", startAR);
+function returnToCamera(){
+  resetMessageScreen();
+  hide(messageOverlay);
+  hideError();
+  requireTargetLeaveBeforeReplay=targetIsVisible;
+  show(scanUI);
+}
 
-imageTarget.addEventListener("targetFound", () => {
-  targetIsVisible = true;
-  if (!videoShown && !countdownRunning && messageOverlay.classList.contains("hidden")) {
+startButton.addEventListener("click",startAR);
+
+imageTarget.addEventListener("targetFound",()=>{
+  targetIsVisible=true;
+  if(!requireTargetLeaveBeforeReplay&&!videoShown&&!countdownRunning&&messageOverlay.classList.contains("hidden")){
     runCountdown();
   }
 });
 
-imageTarget.addEventListener("targetLost", () => {
-  targetIsVisible = false;
-
-  if (!videoShown && !countdownRunning && messageOverlay.classList.contains("hidden")) {
-    show(scanUI);
-  }
+imageTarget.addEventListener("targetLost",()=>{
+  targetIsVisible=false;
+  requireTargetLeaveBeforeReplay=false;
+  if(countdownRunning){cancelCountdown();return}
+  if(!videoShown&&messageOverlay.classList.contains("hidden")) show(scanUI);
 });
 
-playButton.addEventListener("click", async () => {
+playButton.addEventListener("click",async()=>{
   hide(tapToPlay);
-  try {
-    await birthdayVideo.play();
-  } catch (error) {
+  try{await birthdayVideo.play()}
+  catch(error){
     console.error(error);
     show(tapToPlay);
     showError("動画を再生できませんでした。movie.mp4 の形式を確認してください。");
   }
 });
 
-closeVideo.addEventListener("click", closeBirthdayVideo);
-birthdayVideo.addEventListener("ended", finishBirthdayVideo);
+closeVideo.addEventListener("click",closeBirthdayVideo);
+birthdayVideo.addEventListener("ended",showMessageSequence);
+birthdayVideo.addEventListener("error",()=>showError("movie.mp4 を読み込めませんでした。MP4（H.264映像＋AAC音声）で書き出しているか確認してください。"));
+cameraButton.addEventListener("click",returnToCamera);
 
-birthdayVideo.addEventListener("error", () => {
-  showError("movie.mp4 を読み込めませんでした。MP4（H.264映像＋AAC音声）で書き出しているか確認してください。");
-});
-
-scanAgainButton.addEventListener("click", () => {
-  hide(messageOverlay);
-  videoShown = false;
-
-  if (!targetIsVisible) {
-    show(scanUI);
-  } else {
-    showError("もう一度見る場合は、一度Tシャツからカメラを外してから再度向けてください。");
-  }
-});
-
-window.addEventListener("pagehide", () => {
-  if (!arStarted) return;
-  try {
-    const arSystem = arScene.systems["mindar-image-system"];
+window.addEventListener("pagehide",()=>{
+  if(!arStarted) return;
+  try{
+    const arSystem=arScene.systems["mindar-image-system"];
     arSystem?.stop();
-  } catch (_) {}
+  }catch(_){}
 });
