@@ -1,3 +1,4 @@
+
 const startScreen=document.querySelector("#startScreen");
 const loadingScreen=document.querySelector("#loadingScreen");
 const startButton=document.querySelector("#startButton");
@@ -192,3 +193,122 @@ window.addEventListener("pagehide",()=>{
     arSystem?.stop();
   }catch(_){}
 });
+
+
+// ===== iPhone / in-app browser camera viewport stabilizer =====
+(() => {
+  let layoutTimerIds = [];
+
+  const getViewportSize = () => {
+    const vv = window.visualViewport;
+    const width = Math.round(window.innerWidth || vv?.width || document.documentElement.clientWidth || 0);
+    const height = Math.round(vv?.height || window.innerHeight || document.documentElement.clientHeight || 0);
+    return { width, height };
+  };
+
+  const applyCameraViewportFix = () => {
+    const { width, height } = getViewportSize();
+    if (!width || !height) return;
+
+    const root = document.documentElement;
+    const body = document.body;
+
+    [root, body].forEach((el) => {
+      el.style.setProperty('width', `${width}px`, 'important');
+      el.style.setProperty('min-width', `${width}px`, 'important');
+      el.style.setProperty('height', `${height}px`, 'important');
+      el.style.setProperty('min-height', `${height}px`, 'important');
+      el.style.setProperty('margin', '0', 'important');
+      el.style.setProperty('padding', '0', 'important');
+      el.style.setProperty('overflow', 'hidden', 'important');
+      el.style.setProperty('background', '#000', 'important');
+    });
+
+    document.querySelectorAll('video').forEach((video) => {
+      if (video.id === 'birthdayVideo') return;
+
+      video.style.setProperty('position', 'fixed', 'important');
+      video.style.setProperty('top', '0', 'important');
+      video.style.setProperty('right', '0', 'important');
+      video.style.setProperty('bottom', '0', 'important');
+      video.style.setProperty('left', '0', 'important');
+      video.style.setProperty('width', `${width}px`, 'important');
+      video.style.setProperty('min-width', `${width}px`, 'important');
+      video.style.setProperty('max-width', 'none', 'important');
+      video.style.setProperty('height', `${height}px`, 'important');
+      video.style.setProperty('min-height', `${height}px`, 'important');
+      video.style.setProperty('max-height', 'none', 'important');
+      video.style.setProperty('margin', '0', 'important');
+      video.style.setProperty('padding', '0', 'important');
+      video.style.setProperty('object-fit', 'cover', 'important');
+      video.style.setProperty('object-position', 'center center', 'important');
+      video.style.setProperty('transform', 'none', 'important');
+      video.style.setProperty('background', '#000', 'important');
+    });
+
+    const scene = document.querySelector('#arScene');
+    const canvas = document.querySelector('.a-canvas');
+
+    [scene, canvas].forEach((el) => {
+      if (!el) return;
+      el.style.setProperty('position', 'fixed', 'important');
+      el.style.setProperty('top', '0', 'important');
+      el.style.setProperty('right', '0', 'important');
+      el.style.setProperty('bottom', '0', 'important');
+      el.style.setProperty('left', '0', 'important');
+      el.style.setProperty('width', `${width}px`, 'important');
+      el.style.setProperty('min-width', `${width}px`, 'important');
+      el.style.setProperty('max-width', 'none', 'important');
+      el.style.setProperty('height', `${height}px`, 'important');
+      el.style.setProperty('min-height', `${height}px`, 'important');
+      el.style.setProperty('max-height', 'none', 'important');
+      el.style.setProperty('margin', '0', 'important');
+      el.style.setProperty('padding', '0', 'important');
+    });
+
+    try {
+      if (scene?.renderer) {
+        scene.renderer.setSize(width, height, false);
+      }
+      scene?.resize?.();
+    } catch (_) {}
+  };
+
+  const scheduleCameraViewportFix = () => {
+    layoutTimerIds.forEach(clearTimeout);
+    layoutTimerIds = [0, 100, 250, 500, 1000, 1800].map((delay) =>
+      setTimeout(applyCameraViewportFix, delay)
+    );
+  };
+
+  window.addEventListener('resize', scheduleCameraViewportFix, { passive: true });
+  window.addEventListener('orientationchange', scheduleCameraViewportFix, { passive: true });
+  window.addEventListener('pageshow', scheduleCameraViewportFix, { passive: true });
+  window.addEventListener('focus', scheduleCameraViewportFix, { passive: true });
+
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', scheduleCameraViewportFix, { passive: true });
+    window.visualViewport.addEventListener('scroll', scheduleCameraViewportFix, { passive: true });
+  }
+
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) scheduleCameraViewportFix();
+  });
+
+  document.querySelector('#startButton')?.addEventListener('click', scheduleCameraViewportFix);
+  document.querySelector('#cameraButton')?.addEventListener('click', scheduleCameraViewportFix);
+  document.querySelector('#closeVideo')?.addEventListener('click', scheduleCameraViewportFix);
+
+  const observer = new MutationObserver((mutations) => {
+    const relevant = mutations.some((mutation) =>
+      [...mutation.addedNodes].some((node) =>
+        node.nodeType === 1 &&
+        (node.tagName === 'VIDEO' || node.tagName === 'CANVAS' || node.querySelector?.('video, canvas'))
+      )
+    );
+    if (relevant) scheduleCameraViewportFix();
+  });
+
+  observer.observe(document.documentElement, { childList: true, subtree: true });
+  scheduleCameraViewportFix();
+})();
