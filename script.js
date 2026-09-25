@@ -1,551 +1,701 @@
 const startScreen=document.querySelector("#startScreen");
 const loadingScreen=document.querySelector("#loadingScreen");
 const startButton=document.querySelector("#startButton");
+
 const scanUI=document.querySelector("#scanUI");
+
 const countdownOverlay=document.querySelector("#countdownOverlay");
 const countdownNumber=document.querySelector("#countdownNumber");
+
 const videoOverlay=document.querySelector("#videoOverlay");
 const birthdayVideo=document.querySelector("#birthdayVideo");
 const closeVideo=document.querySelector("#closeVideo");
+
 const tapToPlay=document.querySelector("#tapToPlay");
 const playButton=document.querySelector("#playButton");
+
 const messageOverlay=document.querySelector("#messageOverlay");
 const messageLines=[...document.querySelectorAll(".message-line")];
+
+const groupPhotoWrap=document.querySelector("#groupPhotoWrap");
+const groupPhoto=document.querySelector("#groupPhoto");
+
 const cameraButton=document.querySelector("#cameraButton");
+
 const errorBox=document.querySelector("#errorBox");
+
 const arScene=document.querySelector("#arScene");
 const imageTarget=document.querySelector("#imageTarget");
 
+
 let arStarted=false;
+
 let videoShown=false;
+
 let targetIsVisible=false;
+
 let countdownRunning=false;
+
 let countdownRunId=0;
+
 let messageRunId=0;
+
 let requireTargetLeaveBeforeReplay=false;
 
-function show(el){el.classList.remove("hidden")}
-function hide(el){el.classList.add("hidden")}
-function wait(ms){return new Promise(r=>setTimeout(r,ms))}
-function showError(message){errorBox.textContent=message;show(errorBox)}
-function hideError(){hide(errorBox)}
+
+/* =========================
+   COMMON
+========================= */
+
+function show(el){
+
+  el.classList.remove(
+    "hidden"
+  );
+
+}
+
+
+function hide(el){
+
+  el.classList.add(
+    "hidden"
+  );
+
+}
+
+
+function wait(ms){
+
+  return new Promise(
+    resolve=>
+      setTimeout(
+        resolve,
+        ms
+      )
+  );
+
+}
+
+
+function showError(message){
+
+  errorBox.textContent=
+    message;
+
+  show(errorBox);
+
+}
+
+
+function hideError(){
+
+  hide(errorBox);
+
+}
+
 
 function resetVideo(){
+
   birthdayVideo.pause();
+
+
   try{
-    birthdayVideo.currentTime=0
+
+    birthdayVideo.currentTime=0;
+
   }catch(_){}
-  hide(tapToPlay)
+
+
+  hide(tapToPlay);
+
 }
+
+
+/* =========================
+   MESSAGE RESET
+========================= */
 
 function resetMessageScreen(){
+
   messageRunId++;
-  messageLines.forEach(line=>line.classList.remove("is-visible"));
-  cameraButton.classList.remove("is-visible");
+
+
+  messageLines
+    .forEach(
+      line=>
+        line
+          .classList
+          .remove(
+            "is-visible"
+          )
+    );
+
+
+  groupPhotoWrap
+    ?.classList
+    .remove(
+      "is-visible"
+    );
+
+
+  cameraButton
+    .classList
+    .remove(
+      "is-visible"
+    );
+
+
   hide(cameraButton);
+
 }
+
+
+/* =========================
+   iPhone VIDEO PRIME
+========================= */
 
 async function primeVideoForIOS(){
+
   birthdayVideo.muted=true;
 
+
   try{
+
     await birthdayVideo.play();
+
     birthdayVideo.pause();
+
     birthdayVideo.currentTime=0;
+
   }catch(_){}
 
+
   birthdayVideo.muted=false;
+
 }
 
 
-// ==================================================
-// カメラ関連
-// ==================================================
+/* =========================
+   CAMERA VIDEO
+========================= */
 
 function getCameraVideo(){
-  return [...document.querySelectorAll("video")]
-    .find(
-      video =>
-        video !== birthdayVideo &&
-        video.srcObject instanceof MediaStream
-    );
+
+  return [
+    ...document
+      .querySelectorAll(
+        "video"
+      )
+  ].find(
+    video=>
+
+      video !== birthdayVideo &&
+
+      video.srcObject instanceof
+        MediaStream
+  );
+
 }
 
 
-// 対応している端末ではカメラ倍率を1×へ戻す
+/* =========================
+   CAMERA ZOOM
+========================= */
+
 async function normalizeCameraZoom(){
 
-  const cameraVideo=getCameraVideo();
+  const cameraVideo=
+    getCameraVideo();
+
 
   if(!cameraVideo){
+
     return false;
+
   }
 
+
   const track=
-    cameraVideo.srcObject
+    cameraVideo
+      .srcObject
       ?.getVideoTracks?.()[0];
+
 
   if(
     !track ||
     track.readyState!=="live"
   ){
+
     return false;
+
   }
+
 
   try{
 
     const capabilities=
-      track.getCapabilities?.();
+      track
+        .getCapabilities?.();
 
-    if(!capabilities?.zoom){
+
+    if(
+      !capabilities?.zoom
+    ){
+
       return false;
+
     }
 
+
     const min=
-      Number(capabilities.zoom.min);
+      Number(
+        capabilities.zoom.min
+      );
+
 
     const max=
-      Number(capabilities.zoom.max);
+      Number(
+        capabilities.zoom.max
+      );
+
 
     if(
       !Number.isFinite(min) ||
       !Number.isFinite(max)
     ){
+
       return false;
+
     }
 
-    /*
-      基本は1×。
-      端末側で1×が使えない場合は、
-      対応範囲内で最も近い値を使用。
-    */
 
     const desiredZoom=
       Math.min(
-        Math.max(1,min),
+        Math.max(
+          1,
+          min
+        ),
         max
       );
 
+
     await track.applyConstraints({
+
       advanced:[
         {
-          zoom:desiredZoom
+          zoom:
+            desiredZoom
         }
       ]
+
     });
+
 
     return true;
 
-  }catch(error){
 
-    /*
-      zoom APIに対応していないSafari等では
-      何もしない。
-      AR自体はそのまま動かす。
-    */
+  }catch(error){
 
     console.warn(
       "Camera zoom normalization skipped:",
       error
     );
 
+
     return false;
+
   }
+
 }
 
 
-// ==================================================
-// カメラ表示サイズ取得
-// ==================================================
+/* =========================
+   VIEWPORT
+========================= */
 
 function getViewportSize(){
 
   const vv=
     window.visualViewport;
 
+
   const widths=[
+
     window.innerWidth,
+
     vv?.width,
-    document.documentElement.clientWidth,
+
+    document
+      .documentElement
+      .clientWidth,
+
     screen?.width
+
   ].filter(
-    value =>
-      Number.isFinite(value) &&
+    value=>
+
+      Number.isFinite(
+        value
+      ) &&
+
       value>0
   );
 
+
   const heights=[
+
     vv?.height,
+
     window.innerHeight,
-    document.documentElement.clientHeight
+
+    document
+      .documentElement
+      .clientHeight
+
   ].filter(
-    value =>
-      Number.isFinite(value) &&
+    value=>
+
+      Number.isFinite(
+        value
+      ) &&
+
       value>0
   );
+
 
   const width=
     Math.round(
-      Math.max(...widths)
+      Math.max(
+        ...widths
+      )
     );
+
 
   const height=
     Math.round(
-      Math.max(...heights)
+      Math.max(
+        ...heights
+      )
     );
+
 
   return {
     width,
     height
   };
+
 }
 
 
-// ==================================================
-// カメラ表示補正
-// ==================================================
+/* =========================
+   CAMERA VIEWPORT FIX
+========================= */
 
 function applyCameraViewportFix(){
 
   const {
     width,
     height
-  }=getViewportSize();
+  }=
+    getViewportSize();
+
 
   if(
     !width ||
     !height
   ){
+
     return;
+
   }
 
 
-  // HTML / BODY
   const root=
     document.documentElement;
+
 
   const body=
     document.body;
 
 
-  [root,body].forEach(el=>{
+  [
+    root,
+    body
+  ]
+  .forEach(
+    el=>{
 
-    el.style.setProperty(
-      "width",
-      `${width}px`,
-      "important"
-    );
-
-    el.style.setProperty(
-      "min-width",
-      `${width}px`,
-      "important"
-    );
-
-    el.style.setProperty(
-      "height",
-      `${height}px`,
-      "important"
-    );
-
-    el.style.setProperty(
-      "min-height",
-      `${height}px`,
-      "important"
-    );
-
-    el.style.setProperty(
-      "margin",
-      "0",
-      "important"
-    );
-
-    el.style.setProperty(
-      "padding",
-      "0",
-      "important"
-    );
-
-    el.style.setProperty(
-      "overflow",
-      "hidden",
-      "important"
-    );
-
-    el.style.setProperty(
-      "background",
-      "#000",
-      "important"
-    );
-
-  });
+      el.style
+        .setProperty(
+          "width",
+          `${width}px`,
+          "important"
+        );
 
 
-  // ==================================================
-  // MindARのカメラ映像
-  // ==================================================
+      el.style
+        .setProperty(
+          "min-width",
+          `${width}px`,
+          "important"
+        );
+
+
+      el.style
+        .setProperty(
+          "height",
+          `${height}px`,
+          "important"
+        );
+
+
+      el.style
+        .setProperty(
+          "min-height",
+          `${height}px`,
+          "important"
+        );
+
+
+      el.style
+        .setProperty(
+          "margin",
+          "0",
+          "important"
+        );
+
+
+      el.style
+        .setProperty(
+          "padding",
+          "0",
+          "important"
+        );
+
+
+      el.style
+        .setProperty(
+          "overflow",
+          "hidden",
+          "important"
+        );
+
+
+      el.style
+        .setProperty(
+          "background",
+          "#000",
+          "important"
+        );
+
+    }
+  );
+
 
   document
-    .querySelectorAll("video")
-    .forEach(video=>{
+    .querySelectorAll(
+      "video"
+    )
+    .forEach(
+      video=>{
 
-      /*
-        birthdayVideoは
-        お祝い動画なので変更しない
-      */
+        if(
+          video.id===
+          "birthdayVideo"
+        ){
 
-      if(
-        video.id==="birthdayVideo"
-      ){
+          return;
+
+        }
+
+
+        video.style
+          .setProperty(
+            "position",
+            "fixed",
+            "important"
+          );
+
+
+        video.style
+          .setProperty(
+            "top",
+            "0",
+            "important"
+          );
+
+
+        video.style
+          .setProperty(
+            "right",
+            "0",
+            "important"
+          );
+
+
+        video.style
+          .setProperty(
+            "bottom",
+            "0",
+            "important"
+          );
+
+
+        video.style
+          .setProperty(
+            "left",
+            "0",
+            "important"
+          );
+
+
+        video.style
+          .setProperty(
+            "width",
+            `${width}px`,
+            "important"
+          );
+
+
+        video.style
+          .setProperty(
+            "height",
+            `${height}px`,
+            "important"
+          );
+
+
+        /*
+          ズームして見える問題対策
+        */
+
+        video.style
+          .setProperty(
+            "object-fit",
+            "contain",
+            "important"
+          );
+
+
+        video.style
+          .setProperty(
+            "object-position",
+            "center center",
+            "important"
+          );
+
+
+        video.style
+          .setProperty(
+            "transform",
+            "none",
+            "important"
+          );
+
+
+        video.style
+          .setProperty(
+            "background",
+            "#000",
+            "important"
+          );
+
+      }
+    );
+
+
+  const scene=
+    document
+      .querySelector(
+        "#arScene"
+      );
+
+
+  const canvas=
+    document
+      .querySelector(
+        ".a-canvas"
+      );
+
+
+  [
+    scene,
+    canvas
+  ]
+  .forEach(
+    el=>{
+
+      if(!el){
+
         return;
+
       }
 
 
-      video.style.setProperty(
-        "position",
-        "fixed",
-        "important"
-      );
-
-      video.style.setProperty(
-        "top",
-        "0",
-        "important"
-      );
-
-      video.style.setProperty(
-        "right",
-        "0",
-        "important"
-      );
-
-      video.style.setProperty(
-        "bottom",
-        "0",
-        "important"
-      );
-
-      video.style.setProperty(
-        "left",
-        "0",
-        "important"
-      );
-
-      video.style.setProperty(
-        "width",
-        `${width}px`,
-        "important"
-      );
-
-      video.style.setProperty(
-        "min-width",
-        `${width}px`,
-        "important"
-      );
-
-      video.style.setProperty(
-        "max-width",
-        "none",
-        "important"
-      );
-
-      video.style.setProperty(
-        "height",
-        `${height}px`,
-        "important"
-      );
-
-      video.style.setProperty(
-        "min-height",
-        `${height}px`,
-        "important"
-      );
-
-      video.style.setProperty(
-        "max-height",
-        "none",
-        "important"
-      );
-
-      video.style.setProperty(
-        "margin",
-        "0",
-        "important"
-      );
-
-      video.style.setProperty(
-        "padding",
-        "0",
-        "important"
-      );
+      el.style
+        .setProperty(
+          "position",
+          "fixed",
+          "important"
+        );
 
 
-      /*
-        ★今回の重要変更
-
-        以前：
-        object-fit: cover
-
-        ↓
-
-        今回：
-        object-fit: contain
-
-        coverは画面いっぱいにするために
-        カメラ映像をトリミングするので、
-        ズームしたように見える場合があります。
-
-        containにすることで、
-        カメラ映像全体を表示します。
-      */
-
-      video.style.setProperty(
-        "object-fit",
-        "contain",
-        "important"
-      );
-
-      video.style.setProperty(
-        "object-position",
-        "center center",
-        "important"
-      );
-
-      video.style.setProperty(
-        "transform",
-        "none",
-        "important"
-      );
-
-      video.style.setProperty(
-        "background",
-        "#000",
-        "important"
-      );
-
-    });
+      el.style
+        .setProperty(
+          "inset",
+          "0",
+          "important"
+        );
 
 
-  // ==================================================
-  // A-Frame / MindAR Canvas
-  // ==================================================
-
-  const scene=
-    document.querySelector("#arScene");
-
-  const canvas=
-    document.querySelector(".a-canvas");
+      el.style
+        .setProperty(
+          "width",
+          `${width}px`,
+          "important"
+        );
 
 
-  [scene,canvas].forEach(el=>{
+      el.style
+        .setProperty(
+          "height",
+          `${height}px`,
+          "important"
+        );
 
-    if(!el){
-      return;
     }
-
-    el.style.setProperty(
-      "position",
-      "fixed",
-      "important"
-    );
-
-    el.style.setProperty(
-      "top",
-      "0",
-      "important"
-    );
-
-    el.style.setProperty(
-      "right",
-      "0",
-      "important"
-    );
-
-    el.style.setProperty(
-      "bottom",
-      "0",
-      "important"
-    );
-
-    el.style.setProperty(
-      "left",
-      "0",
-      "important"
-    );
-
-    el.style.setProperty(
-      "width",
-      `${width}px`,
-      "important"
-    );
-
-    el.style.setProperty(
-      "min-width",
-      `${width}px`,
-      "important"
-    );
-
-    el.style.setProperty(
-      "max-width",
-      "none",
-      "important"
-    );
-
-    el.style.setProperty(
-      "height",
-      `${height}px`,
-      "important"
-    );
-
-    el.style.setProperty(
-      "min-height",
-      `${height}px`,
-      "important"
-    );
-
-    el.style.setProperty(
-      "max-height",
-      "none",
-      "important"
-    );
-
-    el.style.setProperty(
-      "margin",
-      "0",
-      "important"
-    );
-
-    el.style.setProperty(
-      "padding",
-      "0",
-      "important"
-    );
-
-  });
+  );
 
 
   try{
 
-    if(scene?.renderer){
+    if(
+      scene?.renderer
+    ){
 
-      scene.renderer.setSize(
-        width,
-        height,
-        false
-      );
+      scene
+        .renderer
+        .setSize(
+          width,
+          height,
+          false
+        );
 
     }
 
+
     scene?.resize?.();
+
 
   }catch(_){}
 
 }
 
 
-// ==================================================
-// カメラ補正を複数回実行
-// ==================================================
+/* =========================
+   CAMERA FIX SCHEDULE
+========================= */
 
 let layoutTimerIds=[];
 
@@ -553,36 +703,53 @@ let layoutTimerIds=[];
 function scheduleCameraViewportFix(){
 
   layoutTimerIds
-    .forEach(clearTimeout);
+    .forEach(
+      clearTimeout
+    );
 
 
   layoutTimerIds=[
+
     0,
+
     100,
+
     250,
+
     500,
+
     1000,
+
     1800
-  ].map(delay=>
 
-    setTimeout(()=>{
+  ].map(
+    delay=>
 
-      applyCameraViewportFix();
+      setTimeout(
+        ()=>{
 
-      normalizeCameraZoom();
+          applyCameraViewportFix();
 
-    },delay)
+          normalizeCameraZoom();
 
+        },
+        delay
+      )
   );
 
 }
 
 
-// カメラ起動直後の安定化
+/* =========================
+   CAMERA START STABILIZER
+========================= */
+
 async function stabilizeCameraAfterStart(){
 
   for(
-    const delay of [
+    const delay
+    of
+    [
       0,
       120,
       300,
@@ -593,10 +760,16 @@ async function stabilizeCameraAfterStart(){
   ){
 
     if(delay){
-      await wait(delay);
+
+      await wait(
+        delay
+      );
+
     }
 
+
     applyCameraViewportFix();
+
 
     await normalizeCameraZoom();
 
@@ -605,15 +778,18 @@ async function stabilizeCameraAfterStart(){
 }
 
 
-// ==================================================
-// AR START
-// ==================================================
+/* =========================
+   AR START
+========================= */
 
 async function startAR(){
 
   hideError();
 
-  show(loadingScreen);
+
+  show(
+    loadingScreen
+  );
 
 
   try{
@@ -622,9 +798,10 @@ async function startAR(){
 
 
     const arSystem=
-      arScene.systems[
-        "mindar-image-system"
-      ];
+      arScene
+        .systems[
+          "mindar-image-system"
+        ];
 
 
     if(!arSystem){
@@ -638,49 +815,54 @@ async function startAR(){
 
     await arSystem.start();
 
+
     arStarted=true;
 
 
-    /*
-      カメラ起動直後に
-      表示サイズとズームを補正
-    */
-
     scheduleCameraViewportFix();
+
 
     await stabilizeCameraAfterStart();
 
 
-    /*
-      Safariが映像を描画するまで
-      少し待つ
-    */
-
-    await wait(250);
+    await wait(
+      250
+    );
 
 
-    hide(startScreen);
-
-    hide(loadingScreen);
-
-    show(scanUI);
+    hide(
+      startScreen
+    );
 
 
-    /*
-      表示後にも再補正
-    */
+    hide(
+      loadingScreen
+    );
+
+
+    show(
+      scanUI
+    );
+
 
     scheduleCameraViewportFix();
 
 
   }catch(error){
 
-    console.error(error);
+    console.error(
+      error
+    );
 
 
-    hide(loadingScreen);
+    hide(
+      loadingScreen
+    );
 
-    show(startScreen);
+
+    show(
+      startScreen
+    );
 
 
     showError(
@@ -692,49 +874,73 @@ async function startAR(){
 }
 
 
-// ==================================================
-// カウントダウン
-// ==================================================
+/* =========================
+   COUNTDOWN CANCEL
+========================= */
 
 function cancelCountdown(){
 
   countdownRunId++;
+
 
   countdownRunning=false;
 
 
   countdownNumber
     .classList
-    .remove("is-animating");
+    .remove(
+      "is-animating"
+    );
 
 
-  hide(countdownOverlay);
+  hide(
+    countdownOverlay
+  );
 
 
   if(
+
     !videoShown &&
+
     messageOverlay
       .classList
-      .contains("hidden")
+      .contains(
+        "hidden"
+      )
+
   ){
 
-    show(scanUI);
+    show(
+      scanUI
+    );
 
   }
 
 }
 
 
+/* =========================
+   COUNTDOWN
+========================= */
+
 async function runCountdown(){
 
   if(
+
     countdownRunning ||
+
     videoShown ||
+
     !targetIsVisible ||
+
     !messageOverlay
       .classList
-      .contains("hidden") ||
+      .contains(
+        "hidden"
+      ) ||
+
     requireTargetLeaveBeforeReplay
+
   ){
 
     return;
@@ -749,13 +955,20 @@ async function runCountdown(){
     ++countdownRunId;
 
 
-  hide(scanUI);
+  hide(
+    scanUI
+  );
 
-  show(countdownOverlay);
+
+  show(
+    countdownOverlay
+  );
 
 
   for(
-    const n of [
+    const n
+    of
+    [
       "3",
       "2",
       "1"
@@ -763,8 +976,12 @@ async function runCountdown(){
   ){
 
     if(
-      myRunId!==countdownRunId ||
+
+      myRunId!==
+        countdownRunId ||
+
       !targetIsVisible
+
     ){
 
       cancelCountdown();
@@ -774,33 +991,41 @@ async function runCountdown(){
     }
 
 
-    countdownNumber.textContent=n;
+    countdownNumber
+      .textContent=
+        n;
 
 
     countdownNumber
       .classList
-      .remove("is-animating");
+      .remove(
+        "is-animating"
+      );
 
 
-    void countdownNumber.offsetWidth;
+    void countdownNumber
+      .offsetWidth;
 
 
     countdownNumber
       .classList
-      .add("is-animating");
+      .add(
+        "is-animating"
+      );
 
 
-    await wait(760);
+    await wait(
+      760
+    );
 
-
-    /*
-      カウントダウン中に
-      画像からカメラが外れたら中止
-    */
 
     if(
-      myRunId!==countdownRunId ||
+
+      myRunId!==
+        countdownRunId ||
+
       !targetIsVisible
+
     ){
 
       cancelCountdown();
@@ -812,54 +1037,77 @@ async function runCountdown(){
   }
 
 
-  hide(countdownOverlay);
+  hide(
+    countdownOverlay
+  );
 
 
   countdownRunning=false;
 
 
   if(
-    myRunId===countdownRunId &&
+
+    myRunId===
+      countdownRunId &&
+
     targetIsVisible
+
   ){
 
     await playBirthdayVideo();
 
   }else{
 
-    show(scanUI);
+    show(
+      scanUI
+    );
 
   }
 
 }
 
 
-// ==================================================
-// 動画再生
-// ==================================================
+/* =========================
+   VIDEO PLAY
+========================= */
 
 async function playBirthdayVideo(){
 
-  if(videoShown){
+  if(
+    videoShown
+  ){
+
     return;
+
   }
 
 
   videoShown=true;
 
 
-  hide(scanUI);
+  hide(
+    scanUI
+  );
 
-  hide(countdownOverlay);
 
-  show(videoOverlay);
+  hide(
+    countdownOverlay
+  );
+
+
+  show(
+    videoOverlay
+  );
 
 
   try{
 
-    birthdayVideo.currentTime=0;
+    birthdayVideo
+      .currentTime=0;
 
-    await birthdayVideo.play();
+
+    await birthdayVideo
+      .play();
 
 
   }catch(error){
@@ -870,18 +1118,27 @@ async function playBirthdayVideo(){
     );
 
 
-    show(tapToPlay);
+    show(
+      tapToPlay
+    );
 
   }
 
 }
 
 
+/* =========================
+   VIDEO CLOSE
+========================= */
+
 function closeBirthdayVideo(){
 
   resetVideo();
 
-  hide(videoOverlay);
+
+  hide(
+    videoOverlay
+  );
 
 
   videoShown=false;
@@ -891,9 +1148,14 @@ function closeBirthdayVideo(){
     targetIsVisible;
 
 
-  if(!targetIsVisible){
+  if(
+    !targetIsVisible
+  ){
 
-    show(scanUI);
+    show(
+      scanUI
+    );
+
 
     scheduleCameraViewportFix();
 
@@ -902,30 +1164,39 @@ function closeBirthdayVideo(){
 }
 
 
-// ==================================================
-// 動画終了後メッセージ
-// ==================================================
+/* =========================
+   MESSAGE SEQUENCE
+========================= */
 
 async function showMessageSequence(){
 
   resetVideo();
 
 
-  hide(videoOverlay);
+  hide(
+    videoOverlay
+  );
 
 
   videoShown=false;
 
 
-  hide(scanUI);
+  hide(
+    scanUI
+  );
 
-  hide(countdownOverlay);
+
+  hide(
+    countdownOverlay
+  );
 
 
   resetMessageScreen();
 
 
-  show(messageOverlay);
+  show(
+    messageOverlay
+  );
 
 
   const myRunId=
@@ -933,17 +1204,19 @@ async function showMessageSequence(){
 
 
   /*
-    1行ずつ表示
-
-    1500 = 1.5秒間隔
+    メッセージを
+    1.5秒ごとに表示
   */
 
   for(
-    const line of messageLines
+    const line
+    of
+    messageLines
   ){
 
     if(
-      myRunId!==messageRunId
+      myRunId!==
+      messageRunId
     ){
 
       return;
@@ -953,16 +1226,21 @@ async function showMessageSequence(){
 
     line
       .classList
-      .add("is-visible");
+      .add(
+        "is-visible"
+      );
 
 
-    await wait(1500);
+    await wait(
+      1500
+    );
 
   }
 
 
   if(
-    myRunId!==messageRunId
+    myRunId!==
+    messageRunId
   ){
 
     return;
@@ -970,31 +1248,82 @@ async function showMessageSequence(){
   }
 
 
-  await wait(450);
+  /*
+    「社員一同より」の後に
+    少し余韻
+  */
+
+  await wait(
+    1000
+  );
 
 
-  show(cameraButton);
+  /*
+    集合写真表示
+  */
+
+  groupPhotoWrap
+    ?.classList
+    .add(
+      "is-visible"
+    );
+
+
+  /*
+    写真を見せる時間
+  */
+
+  await wait(
+    1800
+  );
+
+
+  if(
+    myRunId!==
+    messageRunId
+  ){
+
+    return;
+
+  }
+
+
+  /*
+    カメラボタン表示
+  */
+
+  show(
+    cameraButton
+  );
 
 
   requestAnimationFrame(
-    ()=>cameraButton
-      .classList
-      .add("is-visible")
+    ()=>{
+
+      cameraButton
+        .classList
+        .add(
+          "is-visible"
+        );
+
+    }
   );
 
 }
 
 
-// ==================================================
-// 「カメラを起動」
-// ==================================================
+/* =========================
+   RETURN CAMERA
+========================= */
 
 function returnToCamera(){
 
   resetMessageScreen();
 
 
-  hide(messageOverlay);
+  hide(
+    messageOverlay
+  );
 
 
   hideError();
@@ -1004,17 +1333,15 @@ function returnToCamera(){
     targetIsVisible;
 
 
-  /*
-    カメラに戻る時も
-    ズームと表示サイズを補正
-  */
-
   applyCameraViewportFix();
+
 
   normalizeCameraZoom();
 
 
-  show(scanUI);
+  show(
+    scanUI
+  );
 
 
   scheduleCameraViewportFix();
@@ -1022,9 +1349,9 @@ function returnToCamera(){
 }
 
 
-// ==================================================
-// イベント
-// ==================================================
+/* =========================
+   EVENTS
+========================= */
 
 startButton
   .addEventListener(
@@ -1033,7 +1360,6 @@ startButton
   );
 
 
-// 画像認識
 imageTarget
   .addEventListener(
     "targetFound",
@@ -1043,12 +1369,19 @@ imageTarget
 
 
       if(
+
         !requireTargetLeaveBeforeReplay &&
+
         !videoShown &&
+
         !countdownRunning &&
+
         messageOverlay
           .classList
-          .contains("hidden")
+          .contains(
+            "hidden"
+          )
+
       ){
 
         runCountdown();
@@ -1059,7 +1392,6 @@ imageTarget
   );
 
 
-// 画像を見失った
 imageTarget
   .addEventListener(
     "targetLost",
@@ -1071,7 +1403,9 @@ imageTarget
       requireTargetLeaveBeforeReplay=false;
 
 
-      if(countdownRunning){
+      if(
+        countdownRunning
+      ){
 
         cancelCountdown();
 
@@ -1081,13 +1415,21 @@ imageTarget
 
 
       if(
+
         !videoShown &&
+
         messageOverlay
           .classList
-          .contains("hidden")
+          .contains(
+            "hidden"
+          )
+
       ){
 
-        show(scanUI);
+        show(
+          scanUI
+        );
+
 
         applyCameraViewportFix();
 
@@ -1097,25 +1439,32 @@ imageTarget
   );
 
 
-// iPhoneで自動再生できなかった場合
 playButton
   .addEventListener(
     "click",
     async()=>{
 
-      hide(tapToPlay);
+      hide(
+        tapToPlay
+      );
 
 
       try{
 
-        await birthdayVideo.play();
+        await birthdayVideo
+          .play();
+
 
       }catch(error){
 
-        console.error(error);
+        console.error(
+          error
+        );
 
 
-        show(tapToPlay);
+        show(
+          tapToPlay
+        );
 
 
         showError(
@@ -1162,49 +1511,56 @@ cameraButton
   );
 
 
-// ==================================================
-// iPhone / Safari表示変化対策
-// ==================================================
+/* =========================
+   VIEWPORT EVENTS
+========================= */
 
-window.addEventListener(
-  "resize",
-  scheduleCameraViewportFix,
-  {
-    passive:true
-  }
-);
-
-
-window.addEventListener(
-  "orientationchange",
-  scheduleCameraViewportFix,
-  {
-    passive:true
-  }
-);
+window
+  .addEventListener(
+    "resize",
+    scheduleCameraViewportFix,
+    {
+      passive:true
+    }
+  );
 
 
-window.addEventListener(
-  "pageshow",
-  scheduleCameraViewportFix,
-  {
-    passive:true
-  }
-);
+window
+  .addEventListener(
+    "orientationchange",
+    scheduleCameraViewportFix,
+    {
+      passive:true
+    }
+  );
 
 
-window.addEventListener(
-  "focus",
-  scheduleCameraViewportFix,
-  {
-    passive:true
-  }
-);
+window
+  .addEventListener(
+    "pageshow",
+    scheduleCameraViewportFix,
+    {
+      passive:true
+    }
+  );
 
 
-if(window.visualViewport){
+window
+  .addEventListener(
+    "focus",
+    scheduleCameraViewportFix,
+    {
+      passive:true
+    }
+  );
 
+
+if(
   window.visualViewport
+){
+
+  window
+    .visualViewport
     .addEventListener(
       "resize",
       scheduleCameraViewportFix,
@@ -1214,7 +1570,8 @@ if(window.visualViewport){
     );
 
 
-  window.visualViewport
+  window
+    .visualViewport
     .addEventListener(
       "scroll",
       scheduleCameraViewportFix,
@@ -1226,12 +1583,18 @@ if(window.visualViewport){
 }
 
 
+/* =========================
+   VISIBILITY
+========================= */
+
 document
   .addEventListener(
     "visibilitychange",
     ()=>{
 
-      if(!document.hidden){
+      if(
+        !document.hidden
+      ){
 
         scheduleCameraViewportFix();
 
@@ -1241,38 +1604,51 @@ document
   );
 
 
-// ==================================================
-// MindARが後からvideo/canvasを作った場合
-// ==================================================
+/* =========================
+   MINDAR VIDEO OBSERVER
+========================= */
 
 const observer=
   new MutationObserver(
     mutations=>{
 
       const relevant=
-        mutations.some(
-          mutation=>
+        mutations
+          .some(
+            mutation=>
 
-            [...mutation.addedNodes]
+              [
+                ...mutation
+                  .addedNodes
+              ]
               .some(
                 node=>
 
                   node.nodeType===1 &&
 
                   (
-                    node.tagName==="VIDEO" ||
-                    node.tagName==="CANVAS" ||
-                    node.querySelector?.(
-                      "video, canvas"
-                    )
+
+                    node.tagName===
+                      "VIDEO" ||
+
+                    node.tagName===
+                      "CANVAS" ||
+
+                    node
+                      .querySelector?.(
+                        "video, canvas"
+                      )
+
                   )
 
               )
 
-        );
+          );
 
 
-      if(relevant){
+      if(
+        relevant
+      ){
 
         scheduleCameraViewportFix();
 
@@ -1282,44 +1658,57 @@ const observer=
   );
 
 
-observer.observe(
-  document.documentElement,
-  {
-    childList:true,
-    subtree:true
-  }
-);
+observer
+  .observe(
+    document.documentElement,
+    {
 
+      childList:true,
 
-// ==================================================
-// ページ終了
-// ==================================================
+      subtree:true
 
-window.addEventListener(
-  "pagehide",
-  ()=>{
-
-    if(!arStarted){
-      return;
     }
+  );
 
 
-    try{
+/* =========================
+   PAGE EXIT
+========================= */
 
-      const arSystem=
-        arScene.systems[
-          "mindar-image-system"
-        ];
+window
+  .addEventListener(
+    "pagehide",
+    ()=>{
+
+      if(
+        !arStarted
+      ){
+
+        return;
+
+      }
 
 
-      arSystem?.stop();
+      try{
+
+        const arSystem=
+          arScene
+            .systems[
+              "mindar-image-system"
+            ];
 
 
-    }catch(_){}
-
-  }
-);
+        arSystem?.stop();
 
 
-// 初期表示でも補正予約
+      }catch(_){}
+
+    }
+  );
+
+
+/* =========================
+   FIRST FIX
+========================= */
+
 scheduleCameraViewportFix();
