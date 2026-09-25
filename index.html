@@ -1,82 +1,309 @@
-
 <!DOCTYPE html>
 <html lang="ja">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+  />
   <meta name="theme-color" content="#000000" />
+
   <title>SECRET MESSAGE</title>
+
   <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
-  <link rel="stylesheet" href="./style.css" />
+
+  <link
+    rel="stylesheet"
+    href="./style.css"
+  />
 </head>
+
 <body>
-  <div id="startScreen" class="screen screen--start">
+
+  <!-- ========================= -->
+  <!-- START -->
+  <!-- ========================= -->
+
+  <div
+    id="startScreen"
+    class="screen screen--start"
+  >
+
     <div class="start-card">
-      <div class="eyebrow">PRIVATE EXPERIENCE</div>
-      <h1>SECRET<br />MESSAGE</h1>
-      <p>STARTを押してカメラを許可してください。<br />そのあとTシャツのデザインにカメラを向けてください！</p>
-      <button id="startButton" class="primary-button" type="button">START</button>
+
+      <div class="eyebrow">
+        PRIVATE EXPERIENCE
+      </div>
+
+      <h1>
+        SECRET<br />
+        MESSAGE
+      </h1>
+
+      <p>
+        STARTを押してカメラを許可してください。<br />
+        そのあとTシャツのデザインにカメラを向けてください！
+      </p>
+
+      <button
+        id="startButton"
+        class="primary-button"
+        type="button"
+      >
+        START
+      </button>
+
     </div>
+
   </div>
 
-  <div id="loadingScreen" class="screen screen--loading hidden">
+
+  <!-- ========================= -->
+  <!-- CAMERA LOADING -->
+  <!-- ========================= -->
+
+  <div
+    id="loadingScreen"
+    class="screen screen--loading hidden"
+  >
+
     <div class="loader"></div>
-    <div class="loading-text">CAMERA STARTING...</div>
+
+    <div class="loading-text">
+      CAMERA STARTING...
+    </div>
+
   </div>
 
-  <div id="scanUI" class="scan-ui hidden">
+
+  <!-- ========================= -->
+  <!-- SCAN -->
+  <!-- ========================= -->
+
+  <div
+    id="scanUI"
+    class="scan-ui hidden"
+  >
+
     <div class="scan-frame">
+
       <span class="corner corner--tl"></span>
       <span class="corner corner--tr"></span>
       <span class="corner corner--bl"></span>
       <span class="corner corner--br"></span>
+
       <span class="scan-line"></span>
+
     </div>
-    <div class="scan-message">Tシャツのデザインにカメラを向けてください</div>
-  </div>
 
-  <div id="countdownOverlay" class="countdown-overlay hidden">
-    <div id="countdownNumber" class="countdown-number">3</div>
-  </div>
-
-  <div id="videoOverlay" class="video-overlay hidden">
-    <video id="birthdayVideo" src="./movie.mp4" playsinline webkit-playsinline preload="auto"></video>
-    <button id="closeVideo" class="icon-button" type="button" aria-label="動画を閉じる">×</button>
-    <div id="tapToPlay" class="tap-to-play hidden">
-      <button id="playButton" class="primary-button" type="button">動画を再生</button>
+    <div class="scan-message">
+      Tシャツのデザインにカメラを向けてください
     </div>
+
   </div>
 
-  <div id="messageOverlay" class="message-overlay hidden">
-    <div class="message-content">
-      <div class="message-line message-line--title">THANK YOU</div>
-      <div class="message-line">10周年おめでとうございます！</div>
-      <div class="message-line">10年間、私たちを導いてくださり</div>
-      <div class="message-line">ありがとうございます。</div>
-      <div class="message-line">これまでの10年に感謝を。</div>
-      <div class="message-line">そして、これからの10年も一緒に。</div>
-      <div class="message-line message-line--from">社員一同より</div>
+
+  <!-- ========================= -->
+  <!-- COUNTDOWN -->
+  <!-- ========================= -->
+
+  <div
+    id="countdownOverlay"
+    class="countdown-overlay hidden"
+  >
+
+    <div
+      id="countdownNumber"
+      class="countdown-number"
+    >
+      3
     </div>
-    <button id="cameraButton" class="camera-button hidden" type="button">カメラを起動</button>
+
   </div>
 
-  <div id="errorBox" class="error-box hidden"></div>
+
+  <!-- ========================= -->
+  <!-- MOVIE -->
+  <!-- ========================= -->
+
+  <div
+    id="videoOverlay"
+    class="video-overlay hidden"
+  >
+
+    <video
+      id="birthdayVideo"
+      src="./movie.mp4"
+      playsinline
+      webkit-playsinline
+      preload="auto"
+    ></video>
+
+    <button
+      id="closeVideo"
+      class="icon-button"
+      type="button"
+      aria-label="動画を閉じる"
+    >
+      ×
+    </button>
+
+    <div
+      id="tapToPlay"
+      class="tap-to-play hidden"
+    >
+
+      <button
+        id="playButton"
+        class="primary-button"
+        type="button"
+      >
+        動画を再生
+      </button>
+
+    </div>
+
+  </div>
+
+
+  <!-- ========================= -->
+  <!-- MESSAGE -->
+  <!-- ========================= -->
+
+  <div
+    id="messageOverlay"
+    class="message-overlay hidden"
+  >
+
+    <div class="message-scroll">
+
+      <div class="message-content">
+
+        <div class="message-line message-line--title">
+          THANK YOU
+        </div>
+
+        <div class="message-line">
+          10周年おめでとうございます！
+        </div>
+
+        <div class="message-line">
+          10年間、私たちを導いてくださり
+        </div>
+
+        <div class="message-line">
+          ありがとうございます。
+        </div>
+
+        <div class="message-line">
+          これまでの10年に感謝を。
+        </div>
+
+        <div class="message-line">
+          そして、これからの10年も一緒に。
+        </div>
+
+        <div class="message-line message-line--from">
+          社員一同より
+        </div>
+
+
+        <!-- 集合写真 -->
+
+        <div
+          id="groupPhotoWrap"
+          class="group-photo-wrap"
+        >
+
+          <img
+            id="groupPhoto"
+            class="group-photo"
+            src="./group-photo.jpg"
+            alt="社員一同"
+          />
+
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <button
+      id="cameraButton"
+      class="camera-button hidden"
+      type="button"
+    >
+      カメラを起動
+    </button>
+
+  </div>
+
+
+  <!-- ========================= -->
+  <!-- ERROR -->
+  <!-- ========================= -->
+
+  <div
+    id="errorBox"
+    class="error-box hidden"
+  ></div>
+
+
+  <!-- ========================= -->
+  <!-- MindAR -->
+  <!-- ========================= -->
 
   <a-scene
     id="arScene"
-    mindar-image="imageTargetSrc: ./targets.mind; autoStart: false; uiLoading: no; uiScanning: no; uiError: no; filterMinCF: 0.001; filterBeta: 0.01; warmupTolerance: 5; missTolerance: 5;"
+
+    mindar-image="
+      imageTargetSrc: ./targets.mind;
+      autoStart: false;
+      uiLoading: no;
+      uiScanning: no;
+      uiError: no;
+      filterMinCF: 0.001;
+      filterBeta: 0.01;
+      warmupTolerance: 5;
+      missTolerance: 5;
+    "
+
     embedded
+
     color-space="sRGB"
-    renderer="colorManagement: true; physicallyCorrectLights: true; alpha: true; antialias: true"
+
+    renderer="
+      colorManagement: true;
+      physicallyCorrectLights: true;
+      alpha: true;
+      antialias: true
+    "
+
     vr-mode-ui="enabled: false"
+
     device-orientation-permission-ui="enabled: false"
+
     loading-screen="enabled: false"
   >
-    <a-camera position="0 0 0" look-controls="enabled: false" wasd-controls="enabled: false"></a-camera>
-    <a-entity id="imageTarget" mindar-image-target="targetIndex: 0"></a-entity>
+
+    <a-camera
+      position="0 0 0"
+      look-controls="enabled: false"
+      wasd-controls="enabled: false"
+    ></a-camera>
+
+    <a-entity
+      id="imageTarget"
+      mindar-image-target="targetIndex: 0"
+    ></a-entity>
+
   </a-scene>
 
+
   <script src="./script.js"></script>
+
 </body>
 </html>
