@@ -27,7 +27,7 @@ GitHub更新方法
 6. Actions の Pages が緑になったら確認
 
 確認URL
-https://cb-hime.github.io/birthday-ar/?v=925final
+https://cb-hime.github.io/10th-anniversary/?v=925final
 
 注意
 このZIPには movie.mp4 を入れていません。
