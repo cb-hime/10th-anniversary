@@ -138,7 +138,7 @@ async function showMessageSequence(){
   for(const line of messageLines){
     if(myRunId!==messageRunId) return;
     line.classList.add("is-visible");
-    await wait(900);
+    await wait(1500);
   }
 
   if(myRunId!==messageRunId) return;
