@@ -1,444 +1,440 @@
-- {
-  box-sizing: border-box
-  }
+* {
+    box-sizing: border-box
+}
 
 :root {
-\--safe-top: env(safe-area-inset-top, 0px);
-\--safe-right: env(safe-area-inset-right, 0px);
-\--safe-bottom: env(safe-area-inset-bottom, 0px);
-\--safe-left: env(safe-area-inset-left, 0px)
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-right: env(safe-area-inset-right, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+    --safe-left: env(safe-area-inset-left, 0px)
 }
 
 html, body {
-margin: 0;
-width: 100%;
-height: 100%;
-overflow: hidden;
-background: transparent !important;
-color: #111;
-font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, "Noto Sans JP", sans-serif;
--webkit-text-size-adjust: 100%
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: transparent !important;
+    color: #111;
+    font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, "Noto Sans JP", sans-serif;
+    -webkit-text-size-adjust: 100%
 }
 
 body {
-position: fixed;
-inset: 0
+    position: fixed;
+    inset: 0
 }
 
 video:not(#birthdayVideo) {
-position: fixed !important;
-inset: 0 !important;
-width: 100vw !important;
-height: 100vh !important;
-object-fit: cover !important;
-z-index: 0 !important;
-background: transparent !important
+    position: fixed !important;
+    inset: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    object-fit: cover !important;
+    z-index: 0 !important;
+    background: transparent !important
 }
 
 a-scene, .a-canvas {
-position: fixed !important;
-inset: 0 !important;
-width: 100vw !important;
-height: 100vh !important;
-z-index: 1 !important;
-background: transparent !important
+    position: fixed !important;
+    inset: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    z-index: 1 !important;
+    background: transparent !important
 }
 
 .screen, .video-overlay, .message-overlay, .countdown-overlay {
-position: fixed;
-inset: 0
+    position: fixed;
+    inset: 0
 }
 
 .screen--start {
-z-index: 50;
-display: grid;
-place-items: center;
-padding: calc(28px + var(--safe-top)) calc(24px + var(--safe-right)) calc(28px + var(--safe-bottom)) calc(24px + var(--safe-left));
-background: #fff
+    z-index: 50;
+    display: grid;
+    place-items: center;
+    padding: calc(28px + var(--safe-top)) calc(24px + var(--safe-right)) calc(28px + var(--safe-bottom)) calc(24px + var(--safe-left));
+    background: #fff
 }
 
 .start-card {
-width: min(560px, 100%);
-text-align: center
+    width: min(560px, 100%);
+    text-align: center
 }
 
 .eyebrow {
-margin-bottom: 10px;
-font-size: 12px;
-font-weight: 700;
-letter-spacing: .24em
+    margin-bottom: 10px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: .24em
 }
 
 .start-card h1 {
-margin: 0;
-font-size: clamp(54px, 13vw, 110px);
-line-height: .87;
-letter-spacing: -.05em
+    margin: 0;
+    font-size: clamp(54px, 13vw, 110px);
+    line-height: .87;
+    letter-spacing: -.05em
 }
 
 .start-card p {
-margin: 34px auto 28px;
-max-width: 560px;
-font-size: 16px;
-line-height: 1.85
+    margin: 34px auto 28px;
+    max-width: 560px;
+    font-size: 16px;
+    line-height: 1.85
 }
 
 .primary-button {
-appearance: none;
-min-width: 200px;
-padding: 17px 34px;
-border: 0;
-border-radius: 999px;
-background: #111;
-color: #fff;
-cursor: pointer;
-font: inherit;
-font-size: 18px;
-font-weight: 800;
-letter-spacing: .04em
+    appearance: none;
+    min-width: 200px;
+    padding: 17px 34px;
+    border: 0;
+    border-radius: 999px;
+    background: #111;
+    color: #fff;
+    cursor: pointer;
+    font: inherit;
+    font-size: 18px;
+    font-weight: 800;
+    letter-spacing: .04em
 }
 
 .screen--loading {
-z-index: 999;
-display: grid;
-place-items: center;
-align-content: center;
-gap: 18px;
-background: #000;
-color: #fff
+    z-index: 999;
+    display: grid;
+    place-items: center;
+    align-content: center;
+    gap: 18px;
+    background: #000;
+    color: #fff
 }
 
 .loader {
-width: 34px;
-height: 34px;
-border: 3px solid rgba(255, 255, 255, .3);
-border-top-color: #fff;
-border-radius: 50%;
-animation: spin .9s linear infinite
+    width: 34px;
+    height: 34px;
+    border: 3px solid rgba(255, 255, 255, .3);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin .9s linear infinite
 }
 
 .loading-text {
-font-size: 12px;
-font-weight: 700;
-letter-spacing: .12em
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: .12em
 }
 
 @keyframes spin {
-to {
-transform: rotate(360deg)
-}
+    to {
+        transform: rotate(360deg)
+    }
 }
 
 .scan-ui {
-position: fixed;
-inset: 0;
-z-index: 20;
-pointer-events: none
+    position: fixed;
+    inset: 0;
+    z-index: 20;
+    pointer-events: none
 }
 
 .scan-frame {
-position: absolute;
-left: 50%;
-top: 47%;
-width: min(72vw, 390px);
-aspect-ratio: 4/5;
-transform: translate(-50%, -50%)
+    position: absolute;
+    left: 50%;
+    top: 47%;
+    width: min(72vw, 390px);
+    aspect-ratio: 4/5;
+    transform: translate(-50%, -50%)
 }
 
 .corner {
-position: absolute;
-width: 44px;
-height: 44px;
-border-color: rgba(255, 255, 255, .94);
-border-style: solid
+    position: absolute;
+    width: 44px;
+    height: 44px;
+    border-color: rgba(255, 255, 255, .94);
+    border-style: solid
 }
 
 .corner--tl {
-left: 0;
-top: 0;
-border-width:5px 0 0 5px
+    left: 0;
+    top: 0;
+    border-width:5px 0 0 5px
 }
 
 .corner--tr {
-right: 0;
-top: 0;
-border-width:5px 5px 0 0
+    right: 0;
+    top: 0;
+    border-width:5px 5px 0 0
 }
 
 .corner--bl {
-left: 0;
-bottom: 0;
-border-width:0 0 5px 5px
+    left: 0;
+    bottom: 0;
+    border-width:0 0 5px 5px
 }
 
 .corner--br {
-right: 0;
-bottom: 0;
-border-width: 0 5px 5px 0
+    right: 0;
+    bottom: 0;
+    border-width: 0 5px 5px 0
 }
 
 .scan-line {
-position: absolute;
-left: 0;
-right: 0;
-top: 50%;
-height: 3px;
-background: rgba(255, 255, 255, .86);
-box-shadow: 0 0 14px rgba(255, 255, 255, .45);
-animation: scan 2.4s ease-in-out infinite
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50%;
+    height: 3px;
+    background: rgba(255, 255, 255, .86);
+    box-shadow: 0 0 14px rgba(255, 255, 255, .45);
+    animation: scan 2.4s ease-in-out infinite
 }
 
 @keyframes scan {
-0%, 100% {
-transform: translateY(-120px);
-opacity:.45
-}
-```
-50% {
-    transform: translateY(120px);
-    opacity: 1
-}
-```
+    0%, 100% {
+        transform: translateY(-120px);
+        opacity:.45
+    }
 
+    50% {
+        transform: translateY(120px);
+        opacity: 1
+    }
 }
 
 .scan-message {
-position: absolute;
-left: 50%;
-bottom: calc(34px + var(--safe-bottom));
-transform: translateX(-50%);
-width: calc(100% - 36px);
-max-width: 560px;
-padding: 12px 16px;
-border-radius: 999px;
-background: rgba(0, 0, 0, .58);
-color: #fff;
-text-align: center;
-font-size: 14px;
-font-weight: 700;
-backdrop-filter: blur(10px);
--webkit-backdrop-filter: blur(10px)
+    position: absolute;
+    left: 50%;
+    bottom: calc(34px + var(--safe-bottom));
+    transform: translateX(-50%);
+    width: calc(100% - 36px);
+    max-width: 560px;
+    padding: 12px 16px;
+    border-radius: 999px;
+    background: rgba(0, 0, 0, .58);
+    color: #fff;
+    text-align: center;
+    font-size: 14px;
+    font-weight: 700;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px)
 }
 
 .countdown-overlay {
-z-index: 70;
-display: grid;
-place-items: center;
-background: rgba(0, 0, 0, .22);
-pointer-events: none
+    z-index: 70;
+    display: grid;
+    place-items: center;
+    background: rgba(0, 0, 0, .22);
+    pointer-events: none
 }
 
 .countdown-number {
-color: #fff;
-font-size: clamp(140px, 44vw, 320px);
-font-weight: 900;
-line-height: 1;
-letter-spacing: -.06em;
-text-shadow: 0 4px 30px rgba(0, 0, 0, .35)
+    color: #fff;
+    font-size: clamp(140px, 44vw, 320px);
+    font-weight: 900;
+    line-height: 1;
+    letter-spacing: -.06em;
+    text-shadow: 0 4px 30px rgba(0, 0, 0, .35)
 }
 
 .countdown-number.is-animating {
-animation: countdownPop .72s ease both
+    animation: countdownPop .72s ease both
 }
 
 @keyframes countdownPop {
-0% {
-transform: scale(.72);
-opacity:0
-}
-```
-22% {
-    transform: scale(1.05);
-    opacity:1
-}
+    0% {
+        transform: scale(.72);
+        opacity:0
+    }
 
-72% {
-    transform: scale(1);
-    opacity:1
-}
+    22% {
+        transform: scale(1.05);
+        opacity:1
+    }
 
-100% {
-    transform: scale(.92);
-    opacity: 0
-}
-```
+    72% {
+        transform: scale(1);
+        opacity:1
+    }
 
+    100% {
+        transform: scale(.92);
+        opacity: 0
+    }
 }
 
 .video-overlay {
-z-index: 80;
-background: #000
+    z-index: 80;
+    background: #000
 }
 
-\#birthdayVideo {
-position: absolute !important;
-inset: 0 !important;
-width: 100% !important;
-height: 100% !important;
-object-fit: contain !important;
-z-index: 80 !important;
-background: #000 !important
+#birthdayVideo {
+    position: absolute !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: contain !important;
+    z-index: 80 !important;
+    background: #000 !important
 }
 
 .icon-button {
-position: absolute;
-top: calc(14px + var(--safe-top));
-right: calc(14px + var(--safe-right));
-z-index: 82;
-width: 46px;
-height: 46px;
-border: 0;
-border-radius: 50%;
-background: rgba(255, 255, 255, .88);
-color: #111;
-font-size: 30px;
-line-height: 1
+    position: absolute;
+    top: calc(14px + var(--safe-top));
+    right: calc(14px + var(--safe-right));
+    z-index: 82;
+    width: 46px;
+    height: 46px;
+    border: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, .88);
+    color: #111;
+    font-size: 30px;
+    line-height: 1
 }
 
 .tap-to-play {
-position: absolute;
-inset: 0;
-z-index: 83;
-display: grid;
-place-items: center;
-background: rgba(0, 0, 0, .56)
+    position: absolute;
+    inset: 0;
+    z-index: 83;
+    display: grid;
+    place-items: center;
+    background: rgba(0, 0, 0, .56)
 }
 
 .message-overlay {
-z-index: 90;
-display: flex;
-flex-direction: column;
-align-items: center;
-justify-content: center;
-padding: calc(40px + var(--safe-top)) calc(24px + var(--safe-right)) calc(100px + var(--safe-bottom)) calc(24px + var(--safe-left));
-background: #000;
-color: #fff;
-text-align: center
+    z-index: 90;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: calc(40px + var(--safe-top)) calc(24px + var(--safe-right)) calc(100px + var(--safe-bottom)) calc(24px + var(--safe-left));
+    background: #000;
+    color: #fff;
+    text-align: center
 }
 
 .message-content {
-width: min(650px, 100%)
+    width: min(650px, 100%)
 }
 
 .message-line {
-margin: 12px 0;
-opacity: 0;
-transform: translateY(12px);
-font-size: clamp(17px, 4.5vw, 24px);
-line-height: 1.65;
-transition: opacity .65s ease, transform .65s ease
+    margin: 12px 0;
+    opacity: 0;
+    transform: translateY(12px);
+    font-size: clamp(17px, 4.5vw, 24px);
+    line-height: 1.65;
+    transition: opacity .65s ease, transform .65s ease
 }
 
 .message-line.is-visible {
-opacity: 1;
-transform: translateY(0)
+    opacity: 1;
+    transform: translateY(0)
 }
 
 .message-line--title {
-margin-bottom: 28px;
-font-size: clamp(38px, 11vw, 72px);
-font-weight: 900;
-line-height: 1;
-letter-spacing: -.03em
+    margin-bottom: 28px;
+    font-size: clamp(38px, 11vw, 72px);
+    font-weight: 900;
+    line-height: 1;
+    letter-spacing: -.03em
 }
 
 .message-line--from {
-margin-top: 30px;
-font-size: 15px;
-letter-spacing: .12em
+    margin-top: 30px;
+    font-size: 15px;
+    letter-spacing: .12em
 }
 
 .camera-button {
-appearance: none;
-position: absolute;
-left: 50%;
-bottom: calc(28px + var(--safe-bottom));
-transform: translateX(-50%);
-min-width: 210px;
-padding: 16px 28px;
-border: 1px solid rgba(255, 255, 255, .55);
-border-radius: 999px;
-background: #fff;
-color: #111;
-cursor: pointer;
-font: inherit;
-font-size: 16px;
-font-weight: 800;
-opacity: 0;
-transition: opacity .5s ease
+    appearance: none;
+    position: absolute;
+    left: 50%;
+    bottom: calc(28px + var(--safe-bottom));
+    transform: translateX(-50%);
+    min-width: 210px;
+    padding: 16px 28px;
+    border: 1px solid rgba(255, 255, 255, .55);
+    border-radius: 999px;
+    background: #fff;
+    color: #111;
+    cursor: pointer;
+    font: inherit;
+    font-size: 16px;
+    font-weight: 800;
+    opacity: 0;
+    transition: opacity .5s ease
 }
 
 .camera-button.is-visible {
-opacity: 1
+    opacity: 1
 }
 
 .error-box {
-position: fixed;
-left: 16px;
-right: 16px;
-bottom: calc(16px + var(--safe-bottom));
-z-index: 120;
-padding: 14px 16px;
-border-radius: 14px;
-background: rgba(160, 0, 0, .94);
-color: #fff;
-font-size: 14px;
-line-height: 1.55
+    position: fixed;
+    left: 16px;
+    right: 16px;
+    bottom: calc(16px + var(--safe-bottom));
+    z-index: 120;
+    padding: 14px 16px;
+    border-radius: 14px;
+    background: rgba(160, 0, 0, .94);
+    color: #fff;
+    font-size: 14px;
+    line-height: 1.55
 }
 
 .hidden {
-display: none !important
+    display: none !important
 }
 
-/\* ===== iPhone / in-app browser camera viewport stabilizer ===== \*/
+/* ===== iPhone / in-app browser camera viewport stabilizer ===== */
 html, body {
-width: 100vw !important;
-min-width: 100vw !important;
-height: 100vh !important;
-min-height: 100vh !important;
-margin: 0 !important;
-padding: 0 !important;
-overflow: hidden !important;
-background: #000 !important;
+    width: 100vw !important;
+    min-width: 100vw !important;
+    height: 100vh !important;
+    min-height: 100vh !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    background: #000 !important;
 }
 
 body {
-position: fixed !important;
-inset: 0 !important;
+    position: fixed !important;
+    inset: 0 !important;
 }
 
 video:not(#birthdayVideo) {
-position: fixed !important;
-top: 0 !important;
-right: 0 !important;
-bottom: 0 !important;
-left: 0 !important;
-width: 100vw !important;
-min-width: 100vw !important;
-max-width: none !important;
-height: 100vh !important;
-min-height: 100vh !important;
-max-height: none !important;
-margin: 0 !important;
-padding: 0 !important;
-object-fit: cover !important;
-object-position: center center !important;
-transform: none !important;
-background: #000 !important;
+    position: fixed !important;
+    top: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    min-width: 100vw !important;
+    max-width: none !important;
+    height: 100vh !important;
+    min-height: 100vh !important;
+    max-height: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    object-fit: cover !important;
+    object-position: center center !important;
+    transform: none !important;
+    background: #000 !important;
 }
 
 a-scene, .a-canvas {
-position: fixed !important;
-top: 0 !important;
-right: 0 !important;
-bottom: 0 !important;
-left: 0 !important;
-width: 100vw !important;
-min-width: 100vw !important;
-max-width: none !important;
-height: 100vh !important;
-min-height: 100vh !important;
-max-height: none !important;
-margin: 0 !important;
-padding: 0 !important;
+    position: fixed !important;
+    top: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    min-width: 100vw !important;
+    max-width: none !important;
+    height: 100vh !important;
+    min-height: 100vh !important;
+    max-height: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
 }
